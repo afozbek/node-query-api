@@ -8,8 +8,6 @@ exports.getIndex = (req, res, next) => {
     })
 };
 
-
-
 exports.signup = (req, res, next) => {
     bcrpt
         .hash(req.body.password, 12, (err, hash) => {
@@ -47,19 +45,21 @@ exports.login = (req, res, next) => {
             throw err;
         }
         if (!result.length) {
-            //error
             res.status(201).json({
                 status: 'Failure',
-                message: 'there was an error while login'
+                message: 'Email was wrong!'
             })
         }
+
         else {
+            console.log(result[0].password)
             bcrpt.compare(req.body.password, result[0].password)
                 .then(isEqual => {
                     if (!isEqual) {
-                        const error = new Error('Wrong password!');
-                        error.statusCode = 401;
-                        throw error;
+                        res.status(401).json({
+                            status: 'Failure',
+                            message: 'Password was wrong'
+                        })
                     }
                     const token = jwt.sign({
                         email: req.body.email,
@@ -67,7 +67,6 @@ exports.login = (req, res, next) => {
                     }
                         , 'loginSecret'
                         , { expiresIn: '1h' });
-
                     res.status(201).json({
                         status: 'Success',
                         message: 'User login succesfull!',
@@ -82,6 +81,28 @@ exports.login = (req, res, next) => {
                 })
         }
     });
+
+}
+
+exports.postQuery = (req, res, next) => {
+    const query = req.body.query;
+
+    conn.query(query, ((err, result) => {
+        if (err) {
+            res.status(500).json({
+                status: 'Hata',
+                message: 'Hata olustu',
+                err: err
+            })
+        }
+        //Bazı durumlarda undefined!
+        if (!result.length)
+            res.status(201).json({ status: 'Basarili' })
+        res.status(200).json({
+            status: 'Basarili',
+            records: result
+        })
+    }))
 
 }
 
