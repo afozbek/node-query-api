@@ -39,7 +39,6 @@ exports.signup = (req, res, next) => {
 }
 
 exports.login = (req, res, next) => {
-
     let sql = "select password from users where email=?";
     conn.query(sql, [req.body.email], (err, result) => {
         //result[0].password
@@ -57,19 +56,29 @@ exports.login = (req, res, next) => {
         else {
             bcrpt.compare(req.body.password, result[0].password)
                 .then(isEqual => {
-                    if (isEqual) {
-                        const token = jwt.sign({ email: req.body.email, password: result[0].password }, 'loginSecret', { expiresIn: '1h' });
-                        res.status(201).json({
-                            status: 'Success',
-                            message: 'User login succesfull!',
-                            token: token
-                        });
-                    } else {
-                        throw 'The password wrong';
+                    if (!isEqual) {
+                        const error = new Error('Wrong password!');
+                        error.statusCode = 401;
+                        throw error;
                     }
+                    const token = jwt.sign({
+                        email: req.body.email,
+                        password: result[0].password
+                    }
+                        , 'loginSecret'
+                        , { expiresIn: '1h' });
 
-                }).catch(err => {
-                    console.log(err);
+                    res.status(201).json({
+                        status: 'Success',
+                        message: 'User login succesfull!',
+                        token: token
+                    });
+                })
+                .catch(err => {
+                    if (!err.statusCode) {
+                        err.statusCode = 500;
+                    }
+                    throw err;
                 })
         }
     });
