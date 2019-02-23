@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrpt = require('bcryptjs');
 const conn = require('../util/mysql');
+const sha256 = require('sha256');
 
 exports.getIndex = (req, res, next) => {
     res.status(200).json({
@@ -37,7 +38,7 @@ exports.signup = (req, res, next) => {
 }
 
 exports.login = (req, res, next) => {
-    let sql = "select password from users where email=?";
+    let sql = "select id, password from users where email=?";
     conn.query(sql, [req.body.email], (err, result) => {
         //result[0].password
         if (err) {
@@ -52,7 +53,7 @@ exports.login = (req, res, next) => {
         }
 
         else {
-            console.log(result[0].password)
+            console.log(result)
             bcrpt.compare(req.body.password, result[0].password)
                 .then(isEqual => {
                     if (!isEqual) {
@@ -61,9 +62,9 @@ exports.login = (req, res, next) => {
                             message: 'Password was wrong'
                         })
                     }
+                    //set token with userId
                     const token = jwt.sign({
-                        email: req.body.email,
-                        password: result[0].password
+                        id: result[0].id
                     }
                         , 'loginSecret'
                         , { expiresIn: '1h' });
@@ -83,26 +84,39 @@ exports.login = (req, res, next) => {
     });
 
 }
-
+//7e9ca8d07cca8e39bf46846c244fecc488eb173a4a5036ba3f0be8bb83859ddd
 exports.postQuery = (req, res, next) => {
     const query = req.body.query;
+    const hash = req.body.hash;
+    const tokenString = req.headers['x-access-token'] + 'Furkan' + query;
+    const token = sha256(tokenString);
 
-    conn.query(query, ((err, result) => {
-        if (err) {
-            res.status(500).json({
-                status: 'Hata',
-                message: 'Hata olustu',
-                err: err
-            })
-        }
-        //Bazı durumlarda undefined!
-        if (!result.length)
-            res.status(201).json({ status: 'Basarili' })
+    console.log(token);
+    console.log(hash);
+    if (hash != token) {
         res.status(200).json({
-            status: 'Basarili',
-            records: result
-        })
-    }))
+            status: 'Failure',
+            message: 'Not Authenticated'
+        });
+    } else {
+        conn.query(query, ((err, result) => {
+            if (err) {
+                res.status(500).json({
+                    status: 'Failure',
+                    message: 'Hata olustu',
+                    err: err
+                })
+            }
+            //Bazı durumlarda undefined!
+            if (!result.length)
+                res.status(201).json({ status: 'Basarili' })
+            res.status(200).json({
+                status: 'Success!',
+                message: 'Records successfully retrieved',
+                records: result
+            });
+        }));
+    }
 
 }
 
