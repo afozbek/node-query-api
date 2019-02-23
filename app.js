@@ -1,6 +1,8 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
+const Db = require('./util/mysql');
+
 
 const body_parser = require('body-parser');
 
@@ -16,10 +18,19 @@ app.use((error, req, res, next) => {
     const message = error.message;
     const data = error.data;
     res.status(status).json({
-        message: message, data: data, err: error
+        message: message,
+        data: data,
+        err: error
     });
 });
 
-app.listen(port, () => {
-    console.log(`Server listening on ${port}`);
+const config = require('./util/config');
+const db = new Db(config);
+
+db.connect().then(result => {
+    app.listen(port, () => {
+        console.log(`Server listening on ${port}`);
+    })
+}).catch(err => {
+    console.log(err); //any errors including listening the server
 })
