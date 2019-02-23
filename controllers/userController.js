@@ -13,21 +13,21 @@ exports.signup = (req, res, next) => {
     bcrpt
         .hash(req.body.password, 12, (err, hash) => {
             if (err) {
-                console.log(req.body);
-                console.log('Error while hashing password -> ' + err);
                 res.status(500).json({
                     status: 'Failure',
-                    message: 'Cannot hash password!'
+                    message: 'Cannot hash password!',
+                    err: err
                 });
-                throw err;
             }
             let sql = "insert into users (id, email, name, password) values (null, ?, ?, ?)"
             conn.query(sql, [req.body.email, req.body.name, hash], (err, result) => {
                 if (err) {
-                    console.log('Error while creating user -> ' + err);
-                    throw err;
+                    res.status(500).json({
+                        status: 'Failure',
+                        message: 'Error while creating user',
+                        err: err
+                    });
                 }
-                //res
                 res.status(201).json({
                     status: 'Success',
                     message: 'User created',
@@ -40,10 +40,12 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
     let sql = "select id, password from users where email=?";
     conn.query(sql, [req.body.email], (err, result) => {
-        //result[0].password
         if (err) {
-            console.log('There was a problem in database.. -> ' + err);
-            throw err;
+            res.status(500).json({
+                status: 'Failure',
+                message: 'There was a problem in database',
+                err: err
+            });
         }
         if (!result.length) {
             res.status(201).json({
@@ -53,8 +55,15 @@ exports.login = (req, res, next) => {
         }
 
         else {
-            console.log(result)
-            bcrpt.compare(req.body.password, result[0].password)
+            bcrpt.compare(req.body.password, result[0].password, (err, success) => {
+                if (!success) {
+                    res.status(400).json({
+                        status: 'Failure',
+                        message: 'Cannot hash the password',
+                        err: err
+                    });
+                }
+            })
                 .then(isEqual => {
                     if (!isEqual) {
                         res.status(401).json({
@@ -78,13 +87,15 @@ exports.login = (req, res, next) => {
                     if (!err.statusCode) {
                         err.statusCode = 500;
                     }
-                    throw err;
+                    res.status(err.statusCode).json({
+                        status: 'Failure',
+                        message: 'Something wrong :(',
+                        err: err
+                    });
                 })
         }
     });
-
 }
-//7e9ca8d07cca8e39bf46846c244fecc488eb173a4a5036ba3f0be8bb83859ddd
 exports.postQuery = (req, res, next) => {
     const query = req.body.query;
     const hash = req.body.hash;

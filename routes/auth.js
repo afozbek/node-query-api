@@ -6,8 +6,11 @@ const jwt = require('jsonwebtoken');
 
 router.get('/', userController.getIndex);
 
-router.get('/me', isAuth, () => {
-    console.log('Furkan Ozbek');
+router.get('/me', isAuth, (req, res, next) => {
+    res.status(200).json({
+        status: 'Success',
+        message: `Hosgeldiniz ${req.body.name}`,
+    })
 });
 
 router.post('/login', userController.login);
@@ -16,10 +19,5 @@ router.post('/signup', userController.signup);
 
 router.post('/query', isAuth, userController.postQuery);
 
-router.post('/deneme', isAuth, (req, res) => {
-    res.send({
-        message: 'Basarili bir sekilde post edildi'
-    })
-});
 
 module.exports = router;
