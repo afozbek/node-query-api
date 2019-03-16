@@ -6,13 +6,7 @@ const jwt = require('jsonwebtoken');
 
 router.get('/', userController.getIndex);
 
-//// Code-Master Route
-
-
-//// End of Code-Master Route
-
-//Post welcome
-router.post('/me', (req, res, next) => {
+router.get('/me', isAuth, (req, res, next) => {
     res.status(200).json({
         status: 'Success',
         message: `Hosgeldiniz ${req.body.name}`,
