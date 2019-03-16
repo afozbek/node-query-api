@@ -1,8 +1,7 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
-const Db = require('./util/mysql');
-
+const Db = require('./util/mysql');//Db bağlantıları
 
 const body_parser = require('body-parser');
 
@@ -28,6 +27,7 @@ const config = require('./util/config');
 const db = new Db(config);
 
 db.connect().then(result => {
+    console.log(result);
     app.listen(port, () => {
         console.log(`Server listening on ${port}`);
     })

@@ -1,6 +1,6 @@
 const config = {
     host: 'localhost',
-    user: 'furkan',
+    user: 'furkan1',
     password: 'admin',
     database: 'user_api'
 };
