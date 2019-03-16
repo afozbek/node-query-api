@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sha256 = require('sha256');
+const isReachable = require('../middleware/isReachable');
+
 
 const Db = require('../util/mysql');
 const config = require('../util/config');
@@ -8,11 +10,52 @@ const config = require('../util/config');
 const conn = new Db(config);
 
 exports.getIndex = async (req, res, next) => {
+
+    const url = req.query.url
+    let status = 200; //default status
+    if (url) {
+        return res.json({
+            url: url,
+            analysisDuration: 0,
+            redirectedURLs: [],
+            responseMessage: "OK",
+            internalLinks: [{
+                parsedUrl: "",
+                finalUrl: "",
+                secured: "",
+                reachable: "",
+                redirectedURLs: "",
+                totalAccessDuration: "",
+                contentLength: "",
+                responseCode: "",
+                responseMessage: ""
+            }],
+            externalLinks: [
+                {
+                    parsedUrl: "https://www.google.com",
+                    finalUrl: "https://www.google.com",
+                    secured: true,
+                    reachable: true,
+                    totalAccessDuration: 423,
+                    responseCode: 200,
+                    responseMessage: "OK"
+                },
+            ]
+        })
+    }
     res.status(200).json({
-        mesaj: "Hosgeldiniz",
-        conn: result
+        mesaj: "Url atanmadı"
     })
+
 };
+
+//// Code Master Route
+exports.getUrl = async (req, res, next) => {
+    const url = req.query.url;
+    console.log('Furkan     Ozbek');
+}
+
+//// End of Code Master Route
 exports.signup = async (req, res, next) => {
     try {
         const hash = await bcrypt.hash(req.body.password, 12)
