@@ -7,14 +7,13 @@ const config = require('../util/config');
 
 const conn = new Db(config);
 
-const canGetUrl = require('../util/canGetUrl');
 
 exports.getIndex = async (req, res, next) => {
     const url = req.query.url;
     console.log(url);
     if (!url) {
         return res.status(200).json({
-            mesaj: "Hosgeldiniz",
+            mesaj: "HELLO WORLD",
         })
     }
     res.status(200).json({
